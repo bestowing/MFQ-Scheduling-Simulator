@@ -10,7 +10,6 @@ public:
     int PID;              //Identification number of the process
     int queue;            //Initial queue
     int arr_t;            //Arrival time
-    //int close_t;          
     int cycle_num;        //cycle number
     int cycle_index = 0;
     int* seq_burst;
@@ -30,22 +29,6 @@ public:
         delete[] this->seq_burst;
     }
 
-    /*
-    //깊은 복사
-    Process(const Process* process) {
-        cout << "생성";
-        PID = process->PID;
-        queue = process->queue;
-        arr_t = process->arr_t;
-        cycle_num = process->cycle_num;
-        int size_arr = (cycle_num * 2) - 1;
-        seq_burst = new int[size_arr];
-        for (int i = 0; i < size_arr; i++) {
-            seq_burst[i] = process->seq_burst[i];
-        }
-    }
-    */
-
     int get_burst_time() {
         return this->seq_burst[cycle_index];
     }
@@ -58,10 +41,9 @@ public:
             cycle_index += 1;
             int size_arr = (cycle_num * 2) - 1;
             if (cycle_index == size_arr) {
-                cout << PID << "가 종료되었습니다\n";
                 return 2;
             }
-            cout << PID << "가 I/O를 요청했습니다 "<<"cycle index: "<<cycle_index<<"size_arr:"<<size_arr<<"\n";
+            //cout << PID << "가 I/O를 요청했습니다 "<<"cycle index: "<<cycle_index<<"size_arr:"<<size_arr<<"\n";
             return 1;
         } else {
             cout<<"남은 시간 "<<remain_t<<"에서 "<<time_q<<"를 뺀 값: ";
@@ -77,11 +59,10 @@ public:
         if (remain_t <= time_q) {
             seq_burst[cycle_index] = 0;
             this->cycle_index += 1;
+            //깨어날때 프로세스의 우선순위가 하나 높아짐
             queue = queue > 0 ? queue - 1 : 0;
-            cout << PID << "가 깨어났습니다\n";
             return 1;
-        }
-        else {
+        } else {
             seq_burst[cycle_index] = remain_t - time_q;
             return 0;
         }
@@ -115,7 +96,7 @@ void push_queue(Process* process) {
     return;
 }
 
-//input.txt 파일로 입력받아서 최초 queue에 프로세스 할당
+//input.txt 파일로 입력받아서 프로세스 생성, 최초 queue에 프로세스 할당
 void init_process() {
     ifstream input_file("input.txt");
     int process_num;
@@ -162,10 +143,38 @@ Process* scheduling_FCFS(int q_num) {
     return process;
 }
 
+//스케줄링할 프로세스가 없을때 cpu 사용없이 기다린다
+//어떤 프로세스 하나가 깨어날때까지 계속 time quantum을 소모하면서 기다린다
+void wating_IO() {
+    while(1) {
+        bool is_stoped = false;
+        chart.push_back(make_pair(-1, global_time));
+        global_time += 1;
+        //cout<<"cpu 타임: "<<global_time<<"\n";
+        
+        //단, time quantum이 1 증가할때마다 preemtion을 검사한다.
+        vector< Process* >::iterator ptr;
+        for (ptr = sleep.begin(); ptr != sleep.end(); ) {
+            int result = (*ptr)->consume_bt_sleep(1);
+            if (result == 1) {                      //깨어났을경우
+                push_queue(*ptr);
+                is_stoped = true;
+                ptr = sleep.erase(ptr);
+            } else {
+                ++ptr;
+            }
+        }
+
+        //I/O 요청이 끝나고 들어온 프로세스가 깨어나면 탈출
+        if( is_stoped == true ) {
+            return;
+        }
+    }
+}
+
 //q2에서 스케줄링받은 프로세스가 preemption되는건 같은 q2에서의 프로세스와 burst time을 비교했을때만이다.
 //
 Process* scheduling_q2(void) {
-    cout<<"2번째 큐에 남은 모든 프로세스의 burst time을 비교합니다\n";
     vector< Process* >::iterator ptr;
     Process * result = q2.front();
     int min_t = result->get_burst_time();
@@ -208,17 +217,20 @@ void cpu_working(Process* process, int time_q) {
             
             int consume_result = process->consume_bt(1);
             if (consume_result == 1) {                // 입출력을 요청함 -> sleep
-                cout << process->PID << "를 재웠습니다\n";
                 sleep.push_back(process);
                 break;
             } else if (consume_result == 2) {         // 프로세스가 종료됨
-                cout << process->PID<<" 의 종료 확인.\n";
+                //cout << process->PID<<" 의 종료 확인.\n";
                 break;
             }
 
             //I/O 요청이 끝나고 들어온 프로세스가 있고, 그 프로세스의 burst time이 기존 프로세스보다 짧다면 반복문 탈출
             if( is_stoped == true ) {
-                cout<<"preemtion 발생?\n";
+                //cout<<"preemtion 발생\n";
+                //preemption이 발생하면 기존 실행하던 프로세스는 q3으로 진입
+                process->queue += 1;
+                push_queue(process);
+                //새로운 프로세스로 이어받아서 실행
                 process = scheduling_q2();
             }
         }
@@ -228,7 +240,7 @@ void cpu_working(Process* process, int time_q) {
     //Gantt Chart 그리는 정보 담기
     chart.push_back(make_pair(process->PID, global_time));
     //시간 지남
-    cout<<"현재시간 "<<global_time<<"에서 "<<time_q<<"만큼 실행했습니다: ";
+    //cout<<"현재시간 "<<global_time<<"에서 "<<time_q<<"만큼 실행했습니다: ";
     global_time += time_q;
 
     vector< Process* >::iterator ptr;
@@ -244,67 +256,60 @@ void cpu_working(Process* process, int time_q) {
 
     int consume_result = process->consume_bt(time_q);
     if (consume_result == 0) {                // queue의 time_quantum을 모두 소모함 -> 우선순위 1 늘려서 다시 진입
-        cout<<process->PID<<" 의 시간이"<<process->get_burst_time()<<" 남았습니다. 우선순위를 한 단계 낮춥니다.\n";
+        //cout<<process->PID<<" 의 시간이"<<process->get_burst_time()<<" 남았습니다. 우선순위를 한 단계 낮춥니다.\n";
         process->queue += 1;
         push_queue(process);
     } else if (consume_result == 1) {         // 입출력을 요청함 -> sleep
-        cout << process->PID << "를 재웠습니다\n";
         sleep.push_back(process);
     } else {                                   // 프로세스가 종료됨
         cout << process->PID<<" 의 종료 확인.\n";
     }
 }
 
+//모든 큐(레디큐0,1,2,3 & 슬립큐)에서 프로세스가 종료된 것을 확인하면 시뮬레이션 종료.
 void start_simulation() {
     cout<<"시뮬레이션을 시작합니다.\n";
     while (true) {
-        cout<<"running할 프로세스를 탐색합니다.\n";
-        bool is_empty = true;
-        //만약에 q0에 프로세스가 있다면
+        //q0에서 프로세스 발견
         if (q0.empty() == false && q0.front()->arr_t <= global_time ) {
-            cout<<"0번째 큐에서 발견: ";
-            //꺼내서 실행한다
             Process* running = scheduling_FCFS(0);
-            cout << running->PID << "을 cpu로 보냅니다, 타임퀀텀은 2\n";
             cpu_working(running, 2);
+            //cpu룰 release하면 다시 q0부터 프로세스 탐색 -> 레디큐 사이의 우선순위
             continue;
         }
 
-        //만약에 q1에 프로세스가 있다면
+        //q1에서 프로세스 발견
         if (q1.empty() == false && q1.front()->arr_t <= global_time) {
-            cout<<"1번째 큐에서 발견: ";
-            //꺼내서 실행한다
             Process* running = scheduling_FCFS(1);
-            cout << running->PID << "을 cpu로 보냅니다, 타임퀀텀은 6\n";
+            //cout << running->PID << "을 cpu로 보냅니다, 타임퀀텀은 6\n";
             cpu_working(running, 6);
             continue;
         }
 
-        //만약에 q2에 프로세스가 있다면
+        //q2에서 프로세스 발견
         if (q2.empty() == false && q2.front()->arr_t <= global_time) {
-            cout<<"2번째 큐에서 발견: ";
+            //cout<<"2번째 큐에서 발견: ";
             //꺼내서 실행한다
             Process* running = scheduling_q2();
-            cout << running->PID << "을 cpu로 보냅니다, 타임퀀텀은 무제한\n";
             cpu_working(running, 1);
             continue;
         }
 
-        //만약에 q3에 프로세스가 있다면
+        //q3에서 프로세스 발견
         if (q3.empty() == false && q3.front()->arr_t <= global_time) {
-            //꺼내서 실행한다
             Process* running = scheduling_FCFS(3);
-            cout << running->PID << "을 cpu로 보냅니다, 타임퀀텀은 무제한\n";
-            cpu_working(running, running->get_burst_time());
+            cpu_working(running, running->get_burst_time()); //프로세스가 끝날때까지 방해없이 cpu 할당
             continue;
         }
 
-        //I/O 상태인 프로세스 기다리기
+        //슬립큐에서 프로세스 발견
         if ( sleep.empty() == false ) {
-
+            // I/O burst time 기다림
+            wating_IO();
+            continue;
         }
 
-        //모든 프로세스가 종료되면 종료함
+        //모든 프로세스가 종료된 것을 확인하여 시뮬레이션 종료.
         break;
     }
     return;
@@ -312,13 +317,35 @@ void start_simulation() {
 
 //출력 몰빵
 void print_result() {
-    cout<<"끝났지롱~";
-    /*
     vector< pair<int, int> >::iterator ptr;
-    for (ptr = chart.begin(); ptr != chart.end(); ++ptr) {
-        cout << (*ptr).first << " ";
+    int prev = -3;
+    printf(" 시간 | 프로세스1 | 프로세스2 | 프로세스3 | 프로세스4 | 프로세스5\n");
+    int i = 0;
+    int pid = chart.front().first;
+    for (ptr = chart.begin()+1; ptr != chart.end(); ++ptr) {
+        for( ; i<(*ptr).second; i++ ) {
+            int p1 = 32, p2 =32, p3 = 32, p4 = 32, p5 = 32;
+            switch (pid) {
+                case 1:
+                    p1 = 64;
+                    break;
+                case 2:
+                    p2 = 64;
+                    break;
+                case 3:
+                    p3 = 64;
+                    break;
+                case 4:
+                    p4 = 64;
+                    break;
+                default:
+                    p5 = 64;
+                    break;
+            }
+            printf("%4d %8c   %8c   %10c   %10c   %12c\n", i, p1, p2, p3, p4, p5);
+        }
+        pid = (*ptr).first;
     }
-    */
 }
 
 int main() {
