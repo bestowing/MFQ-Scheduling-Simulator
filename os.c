@@ -12,6 +12,7 @@ typedef struct Process {
     int arr_t;                    // Arrival time
     int cycle_num;                // Cycle number
     int cycle_index;              // Index for cycle array
+    int cycle_total;
     int* seq_burst;               // Integer array storing burst time
 } Process;
 
@@ -28,6 +29,7 @@ Node    *   ready_queue1;         // Q1, RR(time quantum = 6)
 Process **  ready_queue2;         // Q2, SRTN
 Node    *   ready_queue3;         // Q3, FCFS
 Process **  sleep_queue;          // I/O를 요청한 프로세스
+int     **  process_table;
 int process_num;                  // 스케줄링할 프로세스 총 개수
 int global_time = 0;
 int time_quantum;                 
@@ -46,6 +48,7 @@ Process* set_process(int _PID, int _queue, int _arr_t, int _cycle_num) {
     new_process->arr_t = _arr_t;
     new_process->cycle_num = _cycle_num;
     new_process->cycle_index = 0;
+    new_process->cycle_total = 0;
     arr_size = (_cycle_num * 2) - 1;
     new_process->seq_burst = (int*)malloc(sizeof(int) * arr_size);
     return new_process;
@@ -53,6 +56,14 @@ Process* set_process(int _PID, int _queue, int _arr_t, int _cycle_num) {
 
 // 입력받은 프로세스의 메모리를 해제하는 함수
 void delete_process(Process* process) {
+    int pid = process->PID - 1;
+    int arrival_time = process->arr_t;
+    int cycle = process->cycle_num;
+    cycle = cycle * 2 - 1;
+    int total = process->cycle_total;
+    int TT = global_time - arrival_time;
+    process_table[pid][0] = TT;
+    process_table[pid][1] = TT - total;
     free(process->seq_burst);  // burst time을 저장하는 배열
     free(process);
     return;
@@ -78,6 +89,10 @@ void init_queue() {
     for(int i=0; i<process_num; i++) {
         sleep_queue[i] = NULL;
     }
+    process_table = (int**)malloc(sizeof(int*) * process_num);
+    for(int i=0; i<process_num; i++) {
+        process_table[i] = malloc(sizeof(int) * 2);
+    }
 }
 
 // input.txt 파일을 읽어 사용자로부터 정보를 입력받음
@@ -94,13 +109,16 @@ void set_simulation() {
     fscanf(file, "%d", &process_num);
     init_queue();
     for (int i = 0; i < process_num; i++) {
+        int total = 0;
         fscanf(file, "%d %d %d %d", &pid, &init_q, &arr_t, &cycle);
         size_arr = (cycle * 2) - 1;
         Process* new_process = set_process(pid, init_q, arr_t, cycle);
         for (int j = 0; j < size_arr; j++) {
             fscanf(file, "%d", &tmp);
+            total += tmp;
             new_process->seq_burst[j] = tmp;
         }
+        new_process->cycle_total = total;
         job_queue[i] = new_process;
     }
     fclose(file);
@@ -348,6 +366,8 @@ Process* scheduling() {
 // 시뮬레이션을 시작함
 void start_simulation() {
     Process* current_process = NULL; // cpu자원을 받은 프로세스
+    //FILE* out_file = fopen("output.txt", "w");
+    //fprintf(out_file, " 시간 | 프로세스1 | 프로세스2 | 프로세스3 | 프로세스4 | 프로세스5 |\n");
     int current_process_id = 0;
     int current_queue = -1;
     int prev_process_id = 0;
@@ -413,6 +433,29 @@ void start_simulation() {
             prev_process_id = current_process_id;
         }
 
+        /*
+        // 파일 입력
+        int p1 = 32, p2 = 32, p3 = 32, p4 = 32, p5 = 32;
+        switch (current_process_id) {
+            case 1:
+                p1 = 64;
+                break;
+            case 2:
+                p2 = 64;
+                break;
+            case 3:
+                p3 = 64;
+                break;
+            case 4:
+                p4 = 64;
+                break;
+            default:
+                p5 = 64;
+                break;
+        }
+        fprintf(out_file, "%4d  |     %c     | %8c  | %10c| %10c| %10c|\n", global_time, p1, p2, p3, p4, p5);
+        */
+
         // cpu의 time quantum이 1 지남
         // I/O 대기중이던 프로세스의 burst time도 1씩 감소시킴
         global_time += 1;
@@ -448,6 +491,7 @@ void start_simulation() {
             }
         }
     }
+    //fclose(out_file);
 }
 
 /*
@@ -476,8 +520,22 @@ void delete_queue() {
     free(sleep_queue);
 }
 
+void print_table() {
+    double ATT = 0;
+    double AWT = 0;
+    for(int i=0; i<process_num; i++) {
+        ATT += process_table[i][0];
+        AWT += process_table[i][1];
+        printf("%d %d\n", process_table[i][0], process_table[i][1]);
+    }
+    ATT /= process_num;
+    AWT /= process_num;
+    printf("%.2lf %.2lf\n", ATT, AWT);
+}
+
 int main() {
     set_simulation();   // 시뮬레이션 세팅
     start_simulation(); // 시뮬레이션 시작
     delete_queue();     // 자원 반납
+    print_table();
 }
