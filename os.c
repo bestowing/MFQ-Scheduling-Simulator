@@ -5,7 +5,7 @@
 ** Data
 */
 
-// ÇÁ·Î¼¼½º ±¸Á¶Ã¼ ¼±¾ğ
+// í”„ë¡œì„¸ìŠ¤ êµ¬ì¡°ì²´ ì„ ì–¸
 typedef struct Process {          
     int PID;                      // Identification number of the process
     int queue;                    // Initial queue
@@ -16,21 +16,21 @@ typedef struct Process {
     int* seq_burst;               // Integer array storing burst time
 } Process;
 
-// ¿¬°á¸®½ºÆ® ±¸Á¶Ã¼ ¼±¾ğ
+// ì—°ê²°ë¦¬ìŠ¤íŠ¸ êµ¬ì¡°ì²´ ì„ ì–¸
 typedef struct Node {
     struct Node* next;
     Process* data;
 } Node;
 
-// Àü¿ªº¯¼ö
-Process **  job_queue;            // ready queue¿¡ arrivalÇÏ±â Àü ÇÁ·Î¼¼½º
+// ì „ì—­ë³€ìˆ˜
+Process **  job_queue;            // ready queueì— arrivalí•˜ê¸° ì „ í”„ë¡œì„¸ìŠ¤
 Node    *   ready_queue0;         // Q0, RR(time quantum = 2)
 Node    *   ready_queue1;         // Q1, RR(time quantum = 6)
 Process **  ready_queue2;         // Q2, SRTN
 Node    *   ready_queue3;         // Q3, FCFS
-Process **  sleep_queue;          // I/O¸¦ ¿äÃ»ÇÑ ÇÁ·Î¼¼½º
+Process **  sleep_queue;          // I/Oë¥¼ ìš”ì²­í•œ í”„ë¡œì„¸ìŠ¤
 int     **  process_table;
-int process_num;                  // ½ºÄÉÁÙ¸µÇÒ ÇÁ·Î¼¼½º ÃÑ °³¼ö
+int process_num;                  // ìŠ¤ì¼€ì¤„ë§í•  í”„ë¡œì„¸ìŠ¤ ì´ ê°œìˆ˜
 int global_time = 0;
 int time_quantum;                 
 
@@ -39,7 +39,7 @@ int time_quantum;
 ** Function
 */
 
-// ÇÁ·Î¼¼½º Æ÷ÀÎÅÍ¿¡ ¸Ş¸ğ¸®¸¦ ÇÒ´çÇÏ°í ÀÔ·Â¹ŞÀº ÇÁ·Î¼¼½º Á¤º¸¸¦ ³ÖÀ½
+// í”„ë¡œì„¸ìŠ¤ í¬ì¸í„°ì— ë©”ëª¨ë¦¬ë¥¼ í• ë‹¹í•˜ê³  ì…ë ¥ë°›ì€ í”„ë¡œì„¸ìŠ¤ ì •ë³´ë¥¼ ë„£ìŒ
 Process* set_process(int _PID, int _queue, int _arr_t, int _cycle_num) {
     Process* new_process = (Process*)malloc(sizeof(Process));
     int arr_size;
@@ -54,7 +54,7 @@ Process* set_process(int _PID, int _queue, int _arr_t, int _cycle_num) {
     return new_process;
 }
 
-// ÀÔ·Â¹ŞÀº ÇÁ·Î¼¼½ºÀÇ ¸Ş¸ğ¸®¸¦ ÇØÁ¦ÇÏ´Â ÇÔ¼ö
+// ì…ë ¥ë°›ì€ í”„ë¡œì„¸ìŠ¤ì˜ ë©”ëª¨ë¦¬ë¥¼ í•´ì œí•˜ëŠ” í•¨ìˆ˜
 void delete_process(Process* process) {
     int pid = process->PID - 1;
     int arrival_time = process->arr_t;
@@ -64,12 +64,12 @@ void delete_process(Process* process) {
     int TT = global_time - arrival_time;
     process_table[pid][0] = TT;
     process_table[pid][1] = TT - total;
-    free(process->seq_burst);  // burst timeÀ» ÀúÀåÇÏ´Â ¹è¿­
+    free(process->seq_burst);  // burst timeì„ ì €ì¥í•˜ëŠ” ë°°ì—´
     free(process);
     return;
 }
 
-// Q0, Q1, Q2, Q3¿Í job_queue, sleep_queue¿¡ ¸Ş¸ğ¸® ÇÒ´ç
+// Q0, Q1, Q2, Q3ì™€ job_queue, sleep_queueì— ë©”ëª¨ë¦¬ í• ë‹¹
 void init_queue() {
     job_queue = (Process**)malloc(sizeof(Process) * process_num);
     ready_queue0 = (Node*)malloc(sizeof(Node));
@@ -95,15 +95,15 @@ void init_queue() {
     }
 }
 
-// input.txt ÆÄÀÏÀ» ÀĞ¾î »ç¿ëÀÚ·ÎºÎÅÍ Á¤º¸¸¦ ÀÔ·Â¹ŞÀ½
-// ÀÔ·Â¹ŞÀº Á¤º¸·Î ÇÁ·Î¼¼½º¿Í ·¹µğÅ¥¿¡ ¸Ş¸ğ¸® ÇÒ´çÇÏ¿© »ı¼ºÇÔ
+// input.txt íŒŒì¼ì„ ì½ì–´ ì‚¬ìš©ìë¡œë¶€í„° ì •ë³´ë¥¼ ì…ë ¥ë°›ìŒ
+// ì…ë ¥ë°›ì€ ì •ë³´ë¡œ í”„ë¡œì„¸ìŠ¤ì™€ ë ˆë””íì— ë©”ëª¨ë¦¬ í• ë‹¹í•˜ì—¬ ìƒì„±í•¨
 void set_simulation() {
     FILE* file = fopen("input.txt", "r");
     int pid, init_q, arr_t, cycle;
     int size_arr;
     int tmp;
     if (file == NULL) {
-        printf("ÆÄÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+        printf("íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
         return;
     }
     fscanf(file, "%d", &process_num);
@@ -125,13 +125,13 @@ void set_simulation() {
     return;
 }
 
-// ÀÔ·Â¹ŞÀº ÇÁ·Î¼¼½ºÀÇ ³²Àº burst timeÀ» ¹İÈ¯ÇÏ´Â ÇÔ¼ö
+// ì…ë ¥ë°›ì€ í”„ë¡œì„¸ìŠ¤ì˜ ë‚¨ì€ burst timeì„ ë°˜í™˜í•˜ëŠ” í•¨ìˆ˜
 int get_burst_time(Process* process) {
     return process->seq_burst[process->cycle_index];
 }
 
-// ÇöÀç ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½ºÀÇ burst_timeÀ» ÇÏ³ª ÁÙÀÓ
-// ¾ÆÁ÷ ½Ã°£ÀÌ ³²¾Ò´Ù¸é 1, I/O¸¦ ¿äÃ»ÇßÀ¸¸é 0, Á¾·áµÇ¾úÀ¸¸é -1À» ¹İÈ¯
+// í˜„ì¬ ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ì˜ burst_timeì„ í•˜ë‚˜ ì¤„ì„
+// ì•„ì§ ì‹œê°„ì´ ë‚¨ì•˜ë‹¤ë©´ 1, I/Oë¥¼ ìš”ì²­í–ˆìœ¼ë©´ 0, ì¢…ë£Œë˜ì—ˆìœ¼ë©´ -1ì„ ë°˜í™˜
 int cpu_running(Process* process) {
     int remain = get_burst_time(process);
     remain -= 1;
@@ -151,10 +151,10 @@ int cpu_running(Process* process) {
     return 1;
 }
 
-// ÀÔ·Â¹ŞÀº ÇÁ·Î¼¼½º¸¦ ÇØ´çÇÏ´Â Å¥¿¡ pushÇÔ
+// ì…ë ¥ë°›ì€ í”„ë¡œì„¸ìŠ¤ë¥¼ í•´ë‹¹í•˜ëŠ” íì— pushí•¨
 void push_queue(Process* process) {
     Node* head;
-    // ÇØ´ç ÇÁ·Î¼¼½º°¡ ¾î´À Å¥¿¡ µé¾î°¥Áö È®ÀÎ
+    // í•´ë‹¹ í”„ë¡œì„¸ìŠ¤ê°€ ì–´ëŠ íì— ë“¤ì–´ê°ˆì§€ í™•ì¸
     int queue_num = process->queue;
     int pid = process->PID - 1;
     switch (queue_num) {
@@ -183,18 +183,18 @@ void push_queue(Process* process) {
     return;
 }
 
-// I/O burst timeÀÌ Á¾·áµÈ ÇÁ·Î¼¼½º¸¦ È®ÀÎÇÏ°í ·¹µğÅ¥¿¡ ³ÖÀ½
+// I/O burst timeì´ ì¢…ë£Œëœ í”„ë¡œì„¸ìŠ¤ë¥¼ í™•ì¸í•˜ê³  ë ˆë””íì— ë„£ìŒ
 void io_check() {
     for (int i = 0; i < process_num; i++) {
         if (sleep_queue[i] != NULL) {
             int time = get_burst_time(sleep_queue[i]);
             if (time == 0) {
-                // I/O burst¸¦ ¸¶Ä£ ÇÁ·Î¼¼½º´Â ¿ì¼±¼øÀ§¸¦ ÇÏ³ª ¿Ã¸²
+                // I/O burstë¥¼ ë§ˆì¹œ í”„ë¡œì„¸ìŠ¤ëŠ” ìš°ì„ ìˆœìœ„ë¥¼ í•˜ë‚˜ ì˜¬ë¦¼
                 sleep_queue[i]->cycle_index += 1;
                 int queue = sleep_queue[i]->queue;
                 queue = queue > 0 ? queue - 1 : 0;
                 sleep_queue[i]->queue = queue;
-                // ·¹µğÅ¥¿¡ ³ÖÀ½
+                // ë ˆë””íì— ë„£ìŒ
                 push_queue(sleep_queue[i]);
                 sleep_queue[i] = NULL;
             }
@@ -202,8 +202,8 @@ void io_check() {
     }
 }
 
-// job queue¿¡ ³²¾ÆÀÖ´Â ÇÁ·Î¼¼½ºÀÇ arrival timeÀ» È®ÀÎÇÏ°í ·¹µğÅ¥¿¡ ³ÖÀ½
-// ³²¾ÆÀÖ´Â ÇÁ·Î¼¼½º°¡ ÀÖÀ¸¸é 1, ¾øÀ¸¸é 0 ¹İÈ¯
+// job queueì— ë‚¨ì•„ìˆëŠ” í”„ë¡œì„¸ìŠ¤ì˜ arrival timeì„ í™•ì¸í•˜ê³  ë ˆë””íì— ë„£ìŒ
+// ë‚¨ì•„ìˆëŠ” í”„ë¡œì„¸ìŠ¤ê°€ ìˆìœ¼ë©´ 1, ì—†ìœ¼ë©´ 0 ë°˜í™˜
 int arrival_check() {
     int result = 0;
     for (int i = 0; i < process_num; i++) {
@@ -219,12 +219,12 @@ int arrival_check() {
     return result;
 }
 
-// ÀÔ·Â¹ŞÀº ÇÁ·Î¼¼½ºÀÇ burst timeÀ» È®ÀÎ,
-// I/O¸¦ ¿äÃ»ÇÑ °æ¿ì sleep_queue·Î º¸³¿
-// ¾ÆÁ÷ ½Ã°£ÀÌ ³²¾Ò´Ù¸é 1, I/O¸¦ ¿äÃ»ÇßÀ¸¸é 0, Á¾·áµÇ¾úÀ¸¸é -1À» ¹İÈ¯
+// ì…ë ¥ë°›ì€ í”„ë¡œì„¸ìŠ¤ì˜ burst timeì„ í™•ì¸,
+// I/Oë¥¼ ìš”ì²­í•œ ê²½ìš° sleep_queueë¡œ ë³´ëƒ„
+// ì•„ì§ ì‹œê°„ì´ ë‚¨ì•˜ë‹¤ë©´ 1, I/Oë¥¼ ìš”ì²­í–ˆìœ¼ë©´ 0, ì¢…ë£Œë˜ì—ˆìœ¼ë©´ -1ì„ ë°˜í™˜
 int burst_check(Process* process, int queue, int PID) {
     int result = cpu_running(process);
-    //I/O ¿äÃ»
+    //I/O ìš”ì²­
     if (result == 0) {
         PID -= 1;
         sleep_queue[PID] = process;
@@ -232,8 +232,8 @@ int burst_check(Process* process, int queue, int PID) {
     return result;
 }
 
-// ÀÔ·Â¹ŞÀº ·¹µğÅ¥ (Q0 or Q1 or Q3)¿¡¼­ ½ºÄÉÁÙ¸µÇÏ¿© ÇÁ·Î¼¼½º ¹İÈ¯
-// ¹İÈ¯ÇÒ ÇÁ·Î¼¼½º°¡ ¾øÀ¸¸é NULL ¹İÈ¯
+// ì…ë ¥ë°›ì€ ë ˆë””í (Q0 or Q1 or Q3)ì—ì„œ ìŠ¤ì¼€ì¤„ë§í•˜ì—¬ í”„ë¡œì„¸ìŠ¤ ë°˜í™˜
+// ë°˜í™˜í•  í”„ë¡œì„¸ìŠ¤ê°€ ì—†ìœ¼ë©´ NULL ë°˜í™˜
 Process* fcfs(int type) {
     Process* result;
     Node* head;
@@ -259,13 +259,13 @@ Process* fcfs(int type) {
     remove = head->next;
     result = remove->data;
     head->next = remove->next;
-    // ½ºÄÉÁÙ¸µÇÑ ÇÁ·Î¼¼½º´Â ·¹µğÅ¥¿¡¼­ Á¦°Å
+    // ìŠ¤ì¼€ì¤„ë§í•œ í”„ë¡œì„¸ìŠ¤ëŠ” ë ˆë””íì—ì„œ ì œê±°
     free(remove);
     return result;
 }
 
-// ·¹µğÅ¥ (Q2)¿¡¼­ ½ºÄÉÁÙ¸µÇÏ¿© ÇÁ·Î¼¼½º ¹İÈ¯
-// ¹İÈ¯ÇÒ ÇÁ·Î¼¼½º°¡ ¾øÀ¸¸é NULL ¹İÈ¯
+// ë ˆë””í (Q2)ì—ì„œ ìŠ¤ì¼€ì¤„ë§í•˜ì—¬ í”„ë¡œì„¸ìŠ¤ ë°˜í™˜
+// ë°˜í™˜í•  í”„ë¡œì„¸ìŠ¤ê°€ ì—†ìœ¼ë©´ NULL ë°˜í™˜
 Process* srtn() {
     Process* result = NULL;
     int min_time = -1;
@@ -287,8 +287,8 @@ Process* srtn() {
     return result;
 }
 
-// ·¹µğÅ¥ Q2¿¡¼­, ÇöÀç ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½ºÀÇ burst_timeº¸´Ù ÂªÀº burst_timeÀ» °¡Áø ÇÁ·Î¼¼½º¸¦ È®ÀÎÇÏ°í ¹İÈ¯ÇÔ( preemption ¹ß»ı )
-// ¹İÈ¯ÇÒ ÇÁ·Î¼¼½º°¡ ¾øÀ¸¸é NULL ¹İÈ¯
+// ë ˆë””í Q2ì—ì„œ, í˜„ì¬ ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ì˜ burst_timeë³´ë‹¤ ì§§ì€ burst_timeì„ ê°€ì§„ í”„ë¡œì„¸ìŠ¤ë¥¼ í™•ì¸í•˜ê³  ë°˜í™˜í•¨( preemption ë°œìƒ )
+// ë°˜í™˜í•  í”„ë¡œì„¸ìŠ¤ê°€ ì—†ìœ¼ë©´ NULL ë°˜í™˜
 Process* preemtion(int burst_time) {
     Process* result = NULL;
     int min_time = burst_time;
@@ -312,7 +312,7 @@ Process* preemtion(int burst_time) {
     return NULL;
 }
 
-// sleep_queue¿¡ ÇÁ·Î¼¼½º°¡ ÇÏ³ª¶óµµ ÀÖÀ¸¸é 1, ¾øÀ¸¸é 0 ¹İÈ¯ÇÔ
+// sleep_queueì— í”„ë¡œì„¸ìŠ¤ê°€ í•˜ë‚˜ë¼ë„ ìˆìœ¼ë©´ 1, ì—†ìœ¼ë©´ 0 ë°˜í™˜í•¨
 int sleep_check() {
     for (int i = 0; i < process_num; i++) {
         if (sleep_queue[i] != NULL) {
@@ -322,8 +322,8 @@ int sleep_check() {
     return 0;
 }
 
-// ÀÔ·Â¹ŞÀº ÇÁ·Î¼¼½º¸¦ asleep »óÅÂ·Î ¸¸µé¾îÁÜ
-// Áï, sleep_queue·Î º¸³¿
+// ì…ë ¥ë°›ì€ í”„ë¡œì„¸ìŠ¤ë¥¼ asleep ìƒíƒœë¡œ ë§Œë“¤ì–´ì¤Œ
+// ì¦‰, sleep_queueë¡œ ë³´ëƒ„
 void sleep(Process* process) {
     int pid = process->PID;
     pid -= 1;
@@ -331,53 +331,53 @@ void sleep(Process* process) {
     return;
 }
 
-// ¿ì¼±¼øÀ§¸¦ °í·ÁÇÑ ½ºÄÉÁÙ¸µÀ¸·Î ÇÁ·Î¼¼½º ¹İÈ¯
-// ·¹µğÅ¥ Q0, Q1, Q2, Q3°¡ ¸ğµÎ ºñ¾ú´Ù¸é NULL ¹İÈ¯
+// ìš°ì„ ìˆœìœ„ë¥¼ ê³ ë ¤í•œ ìŠ¤ì¼€ì¤„ë§ìœ¼ë¡œ í”„ë¡œì„¸ìŠ¤ ë°˜í™˜
+// ë ˆë””í Q0, Q1, Q2, Q3ê°€ ëª¨ë‘ ë¹„ì—ˆë‹¤ë©´ NULL ë°˜í™˜
 Process* scheduling() {
     Process* result = NULL;
-    // Queue 0 È®ÀÎ
+    // Queue 0 í™•ì¸
     result = fcfs(0);
     if (result != NULL) {
         time_quantum = 2;
         return result;
     }
-    // Queue 1 È®ÀÎ
+    // Queue 1 í™•ì¸
     result = fcfs(1);
     if (result != NULL) {
         time_quantum = 6;
         return result;
     }
-    // Queue 2 È®ÀÎ
+    // Queue 2 í™•ì¸
     result = srtn();
     if (result != NULL) {
         time_quantum = -1;
         return result;
     }
-    // Queue 3 È®ÀÎ
+    // Queue 3 í™•ì¸
     result = fcfs(3);
     if (result != NULL) {
         time_quantum = -1;
         return result;
     }
-    // ¹İÈ¯ÇÒ ÇÁ·Î¼¼½º°¡ ¾øÀ½( ·¹µğÅ¥°¡ ¸ğµÎ ºñ¾úÀ½ )
+    // ë°˜í™˜í•  í”„ë¡œì„¸ìŠ¤ê°€ ì—†ìŒ( ë ˆë””íê°€ ëª¨ë‘ ë¹„ì—ˆìŒ )
     return result;
 }
 
-// ½Ã¹Ä·¹ÀÌ¼ÇÀ» ½ÃÀÛÇÔ
+// ì‹œë®¬ë ˆì´ì…˜ì„ ì‹œì‘í•¨
 void start_simulation() {
-    Process* current_process = NULL; // cpuÀÚ¿øÀ» ¹ŞÀº ÇÁ·Î¼¼½º
+    Process* current_process = NULL; // cpuìì›ì„ ë°›ì€ í”„ë¡œì„¸ìŠ¤
     //FILE* out_file = fopen("output.txt", "w");
-    //fprintf(out_file, " ½Ã°£ | ÇÁ·Î¼¼½º1 | ÇÁ·Î¼¼½º2 | ÇÁ·Î¼¼½º3 | ÇÁ·Î¼¼½º4 | ÇÁ·Î¼¼½º5 |\n");
+    //fprintf(out_file, " ì‹œê°„ | í”„ë¡œì„¸ìŠ¤1 | í”„ë¡œì„¸ìŠ¤2 | í”„ë¡œì„¸ìŠ¤3 | í”„ë¡œì„¸ìŠ¤4 | í”„ë¡œì„¸ìŠ¤5 |\n");
     int current_process_id = 0;
     int current_queue = -1;
     int prev_process_id = 0;
     int remain_process = 1;
-    // ¸ğµç ÇÁ·Î¼¼½º°¡ Á¾·áµÉ¶§±îÁö ¹İº¹ÇÔ
+    // ëª¨ë“  í”„ë¡œì„¸ìŠ¤ê°€ ì¢…ë£Œë ë•Œê¹Œì§€ ë°˜ë³µí•¨
     while (1) {
-        // I/O burst time Á¾·áµÈ ÇÁ·Î¼¼½º È®ÀÎ, sleep_queue¿¡¼­ ready_queue·Î ³ÖÀ½
+        // I/O burst time ì¢…ë£Œëœ í”„ë¡œì„¸ìŠ¤ í™•ì¸, sleep_queueì—ì„œ ready_queueë¡œ ë„£ìŒ
         io_check();
 
-        // job_queue¿¡ ³²¾ÆÀÖ´Â ÇÁ·Î¼¼½º°¡ ÀÖ´ÂÁö È®ÀÎ, ¸ğµç ÇÁ·Î¼¼½º°¡ arriveÇÒ¶§±îÁö È®ÀÎÇÔ
+        // job_queueì— ë‚¨ì•„ìˆëŠ” í”„ë¡œì„¸ìŠ¤ê°€ ìˆëŠ”ì§€ í™•ì¸, ëª¨ë“  í”„ë¡œì„¸ìŠ¤ê°€ arriveí• ë•Œê¹Œì§€ í™•ì¸í•¨
         if (remain_process == 1) {
             int arrival_result = arrival_check();
             if (arrival_result == 0) {
@@ -385,34 +385,34 @@ void start_simulation() {
             }
         }
 
-        // ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½º ÀÖ´ÂÁö È®ÀÎ, »õ·Î ½ºÄÉÁÙ¸µÇÔ
+        // ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ ìˆëŠ”ì§€ í™•ì¸, ìƒˆë¡œ ìŠ¤ì¼€ì¤„ë§í•¨
         if (current_process == NULL) {
             current_process = scheduling();
             if (current_process == NULL) {
                 int check = sleep_check();
                 if (remain_process == 0 && check == 0) {
-                    // ¸ğµç ÇÁ·Î¼¼½º°¡ Á¾·áµÈ °ÍÀ» È®ÀÎÇÏ¸é ¹İº¹¹® Á¾·á
+                    // ëª¨ë“  í”„ë¡œì„¸ìŠ¤ê°€ ì¢…ë£Œëœ ê²ƒì„ í™•ì¸í•˜ë©´ ë°˜ë³µë¬¸ ì¢…ë£Œ
                     break;
                 }
-                // I/O¸¦ ±â´Ù¸®´Â ÇÁ·Î¼¼½º¸¸ ³²Àº °æ¿ì, cpu°¡ ±×³É ´ë±âÇÔ
+                // I/Oë¥¼ ê¸°ë‹¤ë¦¬ëŠ” í”„ë¡œì„¸ìŠ¤ë§Œ ë‚¨ì€ ê²½ìš°, cpuê°€ ê·¸ëƒ¥ ëŒ€ê¸°í•¨
                 current_process_id = 0;
                 current_queue = -1;
             } else {
-                // »õ·Î ½ºÄÉÁÙ¸µÇÑ ÇÁ·Î¼¼½ºÀÇ Á¤º¸·Î °»½ÅÇÔ
+                // ìƒˆë¡œ ìŠ¤ì¼€ì¤„ë§í•œ í”„ë¡œì„¸ìŠ¤ì˜ ì •ë³´ë¡œ ê°±ì‹ í•¨
                 current_process_id = current_process->PID;
                 current_queue = current_process->queue;
             }
         }
-        // ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½º ÀÖ´Â °æ¿ì
+        // ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ ìˆëŠ” ê²½ìš°
         else {
-            // ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½º°¡ SRTN ±â¹ıÀÎ °æ¿ì, preemption È®ÀÎÇÔ
+            // ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ê°€ SRTN ê¸°ë²•ì¸ ê²½ìš°, preemption í™•ì¸í•¨
             if (current_queue == 2) {
                 Process* preemtion_process;
                 int burst_time = get_burst_time(current_process);
                 preemtion_process = preemtion(burst_time);
-                // preemption ¹ß»ı
+                // preemption ë°œìƒ
                 if (preemtion_process != NULL) {
-                    // ½ÇÇàÁßÀÌ´ø ÇÁ·Î¼¼½º´Â Q3À¸·Î ÁøÀÔ
+                    // ì‹¤í–‰ì¤‘ì´ë˜ í”„ë¡œì„¸ìŠ¤ëŠ” Q3ìœ¼ë¡œ ì§„ì…
                     current_process->queue = 3;
                     push_queue(current_process);
                     current_process = preemtion_process;
@@ -422,10 +422,10 @@ void start_simulation() {
             }
         }
         
-        // cpu¸¦ ÇÒ´ç¹ŞÀº ÇÁ·Î¼¼½º°¡ º¯°æµÇ´Â °æ¿ì, Ãâ·ÂÇÔ
+        // cpuë¥¼ í• ë‹¹ë°›ì€ í”„ë¡œì„¸ìŠ¤ê°€ ë³€ê²½ë˜ëŠ” ê²½ìš°, ì¶œë ¥í•¨
         if(prev_process_id != current_process_id) {
             if(current_process_id == 0) {
-                // cpu°¡ ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½º°¡ ¾ø´Â °æ¿ì
+                // cpuê°€ ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ê°€ ì—†ëŠ” ê²½ìš°
                 printf("%5d %5c\n", global_time, ' ');
             } else {
                 printf("%5d %5d\n", global_time, current_process_id);
@@ -434,7 +434,7 @@ void start_simulation() {
         }
 
         /*
-        // ÆÄÀÏ ÀÔ·Â
+        // íŒŒì¼ ì…ë ¥
         int p1 = 32, p2 = 32, p3 = 32, p4 = 32, p5 = 32;
         switch (current_process_id) {
             case 1:
@@ -456,8 +456,8 @@ void start_simulation() {
         fprintf(out_file, "%4d  |     %c     | %8c  | %10c| %10c| %10c|\n", global_time, p1, p2, p3, p4, p5);
         */
 
-        // cpuÀÇ time quantumÀÌ 1 Áö³²
-        // I/O ´ë±âÁßÀÌ´ø ÇÁ·Î¼¼½ºÀÇ burst timeµµ 1¾¿ °¨¼Ò½ÃÅ´
+        // cpuì˜ time quantumì´ 1 ì§€ë‚¨
+        // I/O ëŒ€ê¸°ì¤‘ì´ë˜ í”„ë¡œì„¸ìŠ¤ì˜ burst timeë„ 1ì”© ê°ì†Œì‹œí‚´
         global_time += 1;
         time_quantum -= 1;
         for (int i = 0; i < process_num; i++) {
@@ -467,20 +467,20 @@ void start_simulation() {
             }
         }
 
-        // I/O¸¦ ±â´Ù¸®´Â ÇÁ·Î¼¼½º¸¸ ³²¾Æ¼­ ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½º ¾ø´Â °æ¿ì, ±×³É ³Ñ¾î°¨
+        // I/Oë¥¼ ê¸°ë‹¤ë¦¬ëŠ” í”„ë¡œì„¸ìŠ¤ë§Œ ë‚¨ì•„ì„œ ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ ì—†ëŠ” ê²½ìš°, ê·¸ëƒ¥ ë„˜ì–´ê°
         if( current_process == NULL) continue;
 
-        // ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½ºÀÇ cpu burst timeÀ» 1 ÁÙÀÓ
-        // cpu burst timeÀÌ ³¡³µÀ¸¸é ½ÇÇàÁßÀÎ ÇÁ·Î¼¼½º¿¡¼­ Á¦°ÅÇÏ°í ready_queue¿¡ ³ÖÀ½
-        // - I/O ¿äÃ»ÇßÀ¸¸é, ½½¸³Å¥¿¡ ³Ö±â
-        // - ÇÁ·Î¼¼½º°¡ Á¾·áµÇ¾úÀ¸¸é »èÁ¦ÇÔ
+        // ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ì˜ cpu burst timeì„ 1 ì¤„ì„
+        // cpu burst timeì´ ëë‚¬ìœ¼ë©´ ì‹¤í–‰ì¤‘ì¸ í”„ë¡œì„¸ìŠ¤ì—ì„œ ì œê±°í•˜ê³  ready_queueì— ë„£ìŒ
+        // - I/O ìš”ì²­í–ˆìœ¼ë©´, ìŠ¬ë¦½íì— ë„£ê¸°
+        // - í”„ë¡œì„¸ìŠ¤ê°€ ì¢…ë£Œë˜ì—ˆìœ¼ë©´ ì‚­ì œí•¨
         int check = burst_check(current_process, current_queue, current_process_id);
         if (check != 1) {
             current_process = NULL;
             current_process_id = 0;
             current_queue = -1;
         } else {
-            // time quantumÀ» ¸ğµÎ ¼Ò¸ğÇÏ°í ready_queue·Î µ¹¾Æ°¡´Â °æ¿ì, ¿ì¼±¼øÀ§¸¦ 1 ³·Ãã
+            // time quantumì„ ëª¨ë‘ ì†Œëª¨í•˜ê³  ready_queueë¡œ ëŒì•„ê°€ëŠ” ê²½ìš°, ìš°ì„ ìˆœìœ„ë¥¼ 1 ë‚®ì¶¤
             if (time_quantum == 0) {
                 current_queue = current_queue < 3 ? current_queue + 1 : 3 ;
                 current_process->queue = current_queue;
@@ -510,7 +510,7 @@ void print_info() {
 }
 */
 
-// Å¥¿¡ ÇÒ´çÇÑ ¸Ş¸ğ¸®¸¦ ¸ğµÎ ¹İÈ¯ÇÔ
+// íì— í• ë‹¹í•œ ë©”ëª¨ë¦¬ë¥¼ ëª¨ë‘ ë°˜í™˜í•¨
 void delete_queue() {
     free(job_queue);
     free(ready_queue0);
@@ -534,8 +534,8 @@ void print_table() {
 }
 
 int main() {
-    set_simulation();   // ½Ã¹Ä·¹ÀÌ¼Ç ¼¼ÆÃ
-    start_simulation(); // ½Ã¹Ä·¹ÀÌ¼Ç ½ÃÀÛ
-    delete_queue();     // ÀÚ¿ø ¹İ³³
+    set_simulation();   // ì‹œë®¬ë ˆì´ì…˜ ì„¸íŒ…
+    start_simulation(); // ì‹œë®¬ë ˆì´ì…˜ ì‹œì‘
+    delete_queue();     // ìì› ë°˜ë‚©
     print_table();
 }
