@@ -252,7 +252,7 @@ Process* fcfs(int type) {
         break;
     }
 
-    if (head->next == NULL) {
+    if (head == NULL || head->next == NULL) {
         return NULL;
     } 
 
