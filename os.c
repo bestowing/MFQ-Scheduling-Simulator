@@ -493,22 +493,6 @@ void start_simulation() {
     }
 }
 
-/*
-void print_info() {
-    for (int i = 0; i < process_num; i++) {
-        if (process_list[i] != NULL) {
-            printf("%d %d %d %d\n", process_list[i]->PID, process_list[i]->queue, process_list[i]->arr_t, process_list[i]->cycle_num);
-            int cycle = process_list[i]->cycle_num;
-            cycle = cycle * 2 - 1;
-            for (int j = 0; j < cycle; j++) {
-                printf("%d ", process_list[i]->seq_burst[j]);
-            }
-            printf("\n");
-        }
-    }
-}
-*/
-
 // 큐에 할당한 메모리를 모두 반환함
 void delete_queue() {
     free(job_queue);
