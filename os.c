@@ -103,7 +103,7 @@ void set_simulation() {
     int size_arr;
     int tmp;
     if (file == NULL) {
-        printf("파일을 찾을 수 없습니다!");
+        printf("Can't find File.\n");
         return;
     }
     fscanf(file, "%d", &process_num);
@@ -366,12 +366,15 @@ Process* scheduling() {
 // 시뮬레이션을 시작함
 void start_simulation() {
     Process* current_process = NULL; // cpu자원을 받은 프로세스
-    //FILE* out_file = fopen("output.txt", "w");
-    //fprintf(out_file, " 시간 | 프로세스1 | 프로세스2 | 프로세스3 | 프로세스4 | 프로세스5 |\n");
+    printf("\nGantt Chart: \n\n");
+    printf("  Process ID\n");
+    //printf("|  Time  |  Process  |\n");
+    //printf("+--------------------+\n");
     int current_process_id = 0;
     int current_queue = -1;
-    int prev_process_id = 0;
+    int prev_process_id = -1;
     int remain_process = 1;
+    int line = 0;
     // 모든 프로세스가 종료될때까지 반복함
     while (1) {
         // I/O burst time 종료된 프로세스 확인, sleep_queue에서 ready_queue로 넣음
@@ -389,9 +392,16 @@ void start_simulation() {
         if (current_process == NULL) {
             current_process = scheduling();
             if (current_process == NULL) {
-                int check = sleep_check();
-                if (remain_process == 0 && check == 0) {
+                int break_check = sleep_check();
+                if (remain_process == 0 && break_check == 0) {
                     // 모든 프로세스가 종료된 것을 확인하면 반복문 종료
+                    line /= 5;
+                    for(int i=0; i<line; i++) {
+                        printf("|            | \n");
+                    }
+                    line = 0;
+                    printf("|   %4d     | \n", prev_process_id);
+                    printf("+-------------- %d\n\n", global_time);
                     break;
                 }
                 // I/O를 기다리는 프로세스만 남은 경우, cpu가 그냥 대기함
@@ -424,37 +434,27 @@ void start_simulation() {
         
         // cpu를 할당받은 프로세스가 변경되는 경우, 출력함
         if(prev_process_id != current_process_id) {
-            if(current_process_id == 0) {
-                // cpu가 실행중인 프로세스가 없는 경우
-                printf("%5d %5c\n", global_time, ' ');
+            line /= 5;
+            for(int i=0; i<line; i++) {
+                printf("|            | \n");
+            }
+            line = 0;
+            if(prev_process_id == 0) {
+                printf("|   wating   | \n");
             } else {
-                printf("%5d %5d\n", global_time, current_process_id);
+                if(prev_process_id != -1)
+                printf("|   %4d     | \n", prev_process_id);
+            }
+            printf("+-------------- %d\n", global_time);
+            if(current_process_id == 0) {
+                printf("|   wating   | \n");
+            } else {
+                printf("|   %4d     | \n", current_process_id);
             }
             prev_process_id = current_process_id;
+        } else {
+            line++;
         }
-
-        /*
-        // 파일 입력
-        int p1 = 32, p2 = 32, p3 = 32, p4 = 32, p5 = 32;
-        switch (current_process_id) {
-            case 1:
-                p1 = 64;
-                break;
-            case 2:
-                p2 = 64;
-                break;
-            case 3:
-                p3 = 64;
-                break;
-            case 4:
-                p4 = 64;
-                break;
-            default:
-                p5 = 64;
-                break;
-        }
-        fprintf(out_file, "%4d  |     %c     | %8c  | %10c| %10c| %10c|\n", global_time, p1, p2, p3, p4, p5);
-        */
 
         // cpu의 time quantum이 1 지남
         // I/O 대기중이던 프로세스의 burst time도 1씩 감소시킴
@@ -491,7 +491,6 @@ void start_simulation() {
             }
         }
     }
-    //fclose(out_file);
 }
 
 /*
@@ -523,19 +522,25 @@ void delete_queue() {
 void print_table() {
     double ATT = 0;
     double AWT = 0;
+    printf("process table:\n");
+    printf("+-------+-------------------+----------------+\n");
+    printf("|  PID  |  Turnaround Time  |  Waiting Time  |\n");
+    printf("+-------+-------------------+----------------+\n");
     for(int i=0; i<process_num; i++) {
         ATT += process_table[i][0];
         AWT += process_table[i][1];
-        printf("%d %d\n", process_table[i][0], process_table[i][1]);
+        printf("| %5d | %17d | %14d |\n", i+1, process_table[i][0], process_table[i][1]);
     }
+    printf("+-------+-------------------+----------------+\n");
+    printf("\n");
     ATT /= process_num;
     AWT /= process_num;
-    printf("%.2lf %.2lf\n", ATT, AWT);
+    printf("Average Turnaround Time : %.2lf\nAverage Wating Time     : %.2lf\n", ATT, AWT);
 }
 
 int main() {
     set_simulation();   // 시뮬레이션 세팅
     start_simulation(); // 시뮬레이션 시작
     delete_queue();     // 자원 반납
-    print_table();
+    print_table();      // 결과 출력
 }
