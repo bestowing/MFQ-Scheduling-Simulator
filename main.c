@@ -15,8 +15,8 @@ int main(int argc, char *argv[]) {
         return (0);
     if (start_simulation() == -1)
         return (0);
-    delete_queue();
     print_table();
+    delete_queue();
     return (0);
 }
 

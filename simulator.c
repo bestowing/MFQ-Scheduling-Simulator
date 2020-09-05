@@ -453,4 +453,5 @@ void delete_queue(void) {
     free(ready_queue2);
     free(ready_queue3);
     free(sleep_queue);
+    free(process_table);
 }
