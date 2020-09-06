@@ -1,4 +1,4 @@
-#include "mfq-header.h"
+#include "main.h"
 
 int         set_simulation(void);
 int         init_queue(void);

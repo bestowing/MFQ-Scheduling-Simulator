@@ -1,4 +1,4 @@
-#include "mfq-header.h"
+#include "main.h"
 
 int         get_burst_time(Process* process);
 int         cpu_running(Process* process);

@@ -1,4 +1,4 @@
-#include "mfq-header.h"
+#include "main.h"
 
 // func
 int  set_simulation(void);

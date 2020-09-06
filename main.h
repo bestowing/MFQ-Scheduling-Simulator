@@ -1,5 +1,5 @@
-#ifndef __MFQ_HEADER
-# define __MFQ_HEADER
+#ifndef __MAIN_H
+# define __MAIN_H
 
 #include <stdio.h>
 #include <stdlib.h>
