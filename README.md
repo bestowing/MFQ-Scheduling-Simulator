@@ -46,8 +46,8 @@
 * 이 MFQ는 4개의 ready queue로 구성되어 있습니다: {Q<sub>0</sub>, Q<sub>1</sub>, Q<sub>2</sub>, Q<sub>3</sub>}
 * 각 ready queue의 스케줄링 기법은 아래와 같습니다:
 
-|  | |
----|---|---
+| ready queue | scheduling method |
+|---|---|
 | Q<sub>0</sub> | RR(Round-Robin), time quatum = 2 |
 | Q<sub>1</sub> | RR(Round-Robin), time quatum = 6 |
 | Q<sub>2</sub> | SRTN(Shortest-Remaining-Time-Next) |
@@ -74,7 +74,7 @@
 ### 개요
 
 | 소스 파일 | 함수 | 설명 |
-|:---:|:---:|:---|---|
+|:---:|:---:|:---|
 | main.h      | | 필요한 정적 라이브러리를 포함하고, 구조체를 정의하는 헤더파일입니다. |
 | main.c      | **main**         | 프로그램 실행 시작지점인 main 함수입니다.                               |
 | setter.c    | **set_simulation** | 시뮬레이션을 위해 파일을 읽어오고 필요한 자원을 세팅하는 함수입니다.    |
