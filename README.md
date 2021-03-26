@@ -36,7 +36,7 @@
 ### 출력 규칙
 본 프로그램의 출력 예시는 아래와 같습니다.
 
-![출력 예시](https://bestowing.github.io/portfolio/img/os_project1.348aa72a.png)
+![출력 예시](https://user-images.githubusercontent.com/59321616/92317186-2f902780-f039-11ea-91b5-cadd29e2b1ed.png)
 
 * **[Gantt chart]** 프로세스가 실행되는 흐름을 한 눈에 확인할 수 있습니다.
 * **[Process table]** 프로세스별 TT와 WT를 확인할 수 있습니다.
