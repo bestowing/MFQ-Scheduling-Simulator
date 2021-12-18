@@ -1,1 +1,8 @@
+# ignore object files.
 obj/*.o
+
+# ignore vscode configuration directory.
+.vscode
+
+# ignore executable file.
+mfq-simulator
