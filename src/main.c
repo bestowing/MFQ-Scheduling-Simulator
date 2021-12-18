@@ -25,9 +25,9 @@ static void	print_table(void)
 
 int			main()
 {
-    if (set_simulation() == -1)
+    if (set_simulation() == ERROR)
         return (0);
-    if (start_simulation() == -1)
+    if (start_simulation() == ERROR)
         return (0);
     print_table();
     delete_queue();

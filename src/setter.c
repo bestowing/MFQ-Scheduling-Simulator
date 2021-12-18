@@ -5,42 +5,42 @@
 static int			init_queue(void) {
     job_queue = (t_process**)malloc(sizeof(t_process) * process_num);
     if (job_queue == NULL)
-        return (-1);
+        return (ERROR);
     ready_queue0 = (t_node*)malloc(sizeof(t_node));
     if (ready_queue0 == NULL)
-        return (-1);
+        return (ERROR);
     ready_queue0->data = NULL;
     ready_queue0->next = NULL;
     ready_queue1 = (t_node*)malloc(sizeof(t_node));
     if (ready_queue1 == NULL)
-        return (-1);
+        return (ERROR);
     ready_queue1->data = NULL;
     ready_queue1->next = NULL;
     ready_queue2 = (t_process**)malloc(sizeof(t_process) * process_num);
     if (ready_queue2 == NULL)
-        return (-1);
+        return (ERROR);
     for(int i=0; i<process_num; i++) {
         ready_queue2[i] = NULL;
     }
     ready_queue3 = (t_node*)malloc(sizeof(t_node));
     if (ready_queue3 == NULL)
-        return (-1);
+        return (ERROR);
     ready_queue3->data = NULL;
     ready_queue3->next = NULL;
     sleep_queue = (t_process**)malloc(sizeof(t_process) * process_num);
     if (sleep_queue == NULL)
-        return (-1);
+        return (ERROR);
     for (int i = 0; i < process_num; i++) {
         sleep_queue[i] = NULL;
     }
     process_table = (int**)malloc(sizeof(int*) * process_num);
     if (process_table == NULL)
-        return (-1);
+        return (ERROR);
     for (int i = 0; i < process_num; i++)
     {
         process_table[i] = malloc(sizeof(int) * 2);
         if (process_table[i] == NULL)
-            return (-1);
+            return (ERROR);
     }
     return (0);
 }
@@ -82,14 +82,14 @@ int					set_processes(FILE *file) {
         int total = 0;
         file_value = 0;
         if (fscanf(file, "%d %d %d %d", &pid, &init_q, &arr_t, &cycle) == -1)
-            return (-1);
+            return (ERROR);
         size_arr = (cycle * 2) - 1;
         new_process = init_process(pid, init_q, arr_t, cycle);
         if (new_process == NULL)
-            return (-1);
+            return (ERROR);
         for (int j = 0; j < size_arr; j++) {
             if (fscanf(file, "%d", &file_value) == -1)
-                return (-1);
+                return (ERROR);
             total += file_value;
             new_process->seq_burst[j] = file_value;
         }
@@ -114,22 +114,22 @@ int					set_simulation(void)
     if (file == NULL)
     {
         printf("Error code 01: failed to find \"input.txt\" file.\n");
-        return (-1);
+        return (ERROR);
     }
-    if (fscanf(file, "%d", &process_num) == -1)
+    if (fscanf(file, "%d", &process_num) == ERROR)
     {
         printf("Error code 02: failed to read \"input.txt\" file.\n");
-        return (-1);
+        return (ERROR);
     }
-    if (init_queue() == -1)
+    if (init_queue() == ERROR)
     {
         printf("Error code 03: failed to allocate memory bytes.\n");
-        return (-1);
+        return (ERROR);
     }
-    if (set_processes(file) == -1)
+    if (set_processes(file) == ERROR)
     {
         printf("Error code 04: failed to read \"input.txt\" file or allocate memory bytes.\n");
-        return (-1);
+        return (ERROR);
     }
     return (0);
 }
