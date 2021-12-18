@@ -3,13 +3,12 @@
 int global_time = 0;
 int time_quantum;
 
-// return remaining burst time of the process
-static int get_burst_time(t_process* process)
+static int          get_burst_time(t_process *process)
 {
     return process->seq_burst[process->cycle_index];
 }
 
-static void delete_process(t_process* process, int global_time) {
+static void         delete_process(t_process *process, int global_time) {
     int pid;
     int arrival_time;
     int total;
@@ -30,7 +29,7 @@ static void delete_process(t_process* process, int global_time) {
 // if the process is finished, then return (-1)
 // else if the process call I/O system call, then return (0)
 // else, that means the process has not spent all time quantum, then return (1)
-static int cpu_running(t_process* process)
+static int          cpu_running(t_process *process)
 {
     int remain;
     int cycle_num;
@@ -55,12 +54,12 @@ static int cpu_running(t_process* process)
 }
 
 // push the process proper ready queue
-static int push_queue(t_process* process)
+static int          push_queue(t_process *process)
 {
-    t_node* head;
-    t_node* node;
-    int queue_num;
-    int pid;
+    t_node  *head;
+    t_node  *node;
+    int     queue_num;
+    int     pid;
 
     queue_num = process->queue;
     pid = process->PID - 1;
@@ -84,7 +83,7 @@ static int push_queue(t_process* process)
     if (node == NULL)
     {
         printf("Error code 05: failed to allocate memory bytes.\n");
-        return (-1);
+        return (ERROR);
     }
     node->data = process;
     node->next = NULL;
@@ -97,7 +96,7 @@ static int push_queue(t_process* process)
 
 // check processes for which I/O system call have been completed
 // push them to proper ready queue
-static int io_check(void)
+static int          io_check(void)
 {
     for (int i = 0; i < process_num; i++) {
         if (sleep_queue[i] != NULL) {
@@ -120,7 +119,7 @@ static int io_check(void)
 // if the job queue is empty, then return (0)
 // else, that means the job queue is not empty, then return (1)
 // if failed to push ready queue, then return (-1)
-static int arrival_check(void)
+static int          arrival_check(void)
 {
     int result;
 
@@ -129,7 +128,7 @@ static int arrival_check(void)
         if (job_queue[i] != NULL) {
             if (job_queue[i]->arr_t == global_time) {
                 if (push_queue(job_queue[i]) == -1)
-                    return (-1);
+                    return (ERROR);
                 job_queue[i] = NULL;
             } else {
                 result = 1;
@@ -145,7 +144,7 @@ static int arrival_check(void)
 // if the process request I/O system call, then return (0)
 // else if the process has not spent all time quantum, then return (1)
 // else, that means the process is finished, then return (-1)
-static int burst_check(t_process* process, int PID)
+static int          burst_check(t_process* process, int PID)
 {
     int result;
     
@@ -160,11 +159,11 @@ static int burst_check(t_process* process, int PID)
 // schedule a process from receiving ready queue (= type)
 // if there's nothing to schedule, then return (NULL)
 // else, return scheduled process pointer
-static t_process* fcfs(int type)
+static t_process    *fcfs(int type)
 {
-    t_process* result;
-    t_node* head;
-    t_node* remove;
+    t_process   *result;
+    t_node      *head;
+    t_node      *remove;
 
     switch (type) {
     case 0:
@@ -193,12 +192,12 @@ static t_process* fcfs(int type)
 // schedule a process from ready queue 2, SRTN method
 // if there's nothing to schedule, then return (NULL)
 // else, return scheduled process pointer
-static t_process* srtn(void)
+static t_process    *srtn(void)
 {
-    t_process* result;
-    int min_time;
-    int index;
-    int burst_time;
+    t_process   *result;
+    int         min_time;
+    int         index;
+    int         burst_time;
 
     result = NULL;
     min_time = -1;
@@ -222,11 +221,11 @@ static t_process* srtn(void)
 
 // verifies that the preemtion has occurred (only ready queue 2)
 // if there's nothing to schedule, that means the preemption does not happend, then return (NULL)
-static t_process* preemtion(int burst_time)
+static t_process	*preemtion(int burst_time)
 {
-    t_process* result;
-    int min_time;
-    int index = -1;
+    t_process	*result;
+    int			min_time;
+    int			index;
 
     result = NULL;
     min_time = burst_time;
@@ -250,7 +249,7 @@ static t_process* preemtion(int burst_time)
 
 // if sleep queue is empty, then return (0)
 // else, that means any process is present in the sleep queue, then return (1)
-static int sleep_check(void)
+static int			sleep_check(void)
 {
     for (int i = 0; i < process_num; i++) {
         if (sleep_queue[i] != NULL) {
@@ -263,9 +262,9 @@ static int sleep_check(void)
 // Schedule a priority-considering process 
 // if all the ready queues are empty, then return (NULL)
 // else, return the process pointer
-static t_process* scheduling(void)
+static t_process	*scheduling(void)
 {
-    t_process* result;
+    t_process	*result;
 
     result = fcfs(0);
     if (result != NULL) {
@@ -291,18 +290,18 @@ static t_process* scheduling(void)
 }
 
 // main simulation
-int	start_simulation(void)
+int				start_simulation(void)
 {
-    t_process *current_process;
-    t_process* preemtion_process;
-    int current_process_id;
-    int current_queue;
-    int prev_process_id;
-    int remain_process;
-    int line;
-    int arrival_result;
-    int break_check;
-    int burst_time;
+    t_process	*current_process;
+    t_process   *preemtion_process;
+    int         current_process_id;
+    int         current_queue;
+    int         prev_process_id;
+    int         remain_process;
+    int         line;
+    int         arrival_result;
+    int         break_check;
+    int         burst_time;
 
     current_process = NULL;
     preemtion_process = NULL;
@@ -359,8 +358,8 @@ int	start_simulation(void)
                 if (preemtion_process != NULL) {
                     // 3-2-2. Push the previous process if the preemtion has occurred
                     current_process->queue = 3;
-                    if (push_queue(current_process) == -1)
-                        return (-1);
+                    if (push_queue(current_process) == ERROR)
+                        return (ERROR);
                     current_process = preemtion_process;
                     current_process_id = current_process->PID;
                     current_queue = 2;
@@ -414,8 +413,8 @@ int	start_simulation(void)
             if (time_quantum == 0) {
                 current_queue = current_queue < 3 ? current_queue + 1 : 3 ;
                 current_process->queue = current_queue;
-                if (push_queue(current_process) == -1)
-                    return (-1);
+                if (push_queue(current_process) == ERROR)
+                    return (ERROR);
                 current_process = NULL;
                 current_process_id = 0;
                 current_queue = -1;
@@ -425,7 +424,7 @@ int	start_simulation(void)
     return (0);
 }
 
-void delete_queue(void)
+void			delete_queue(void)
 {
     free(job_queue);
     free(ready_queue0);
