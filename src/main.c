@@ -1,28 +1,12 @@
 #include "main.h"
 
-// func
-int  set_simulation(void);
-int  start_simulation(void);
-void delete_queue(void);
-void print_table(void);
+static void	print_table(void)
+{
+    double	ATT;
+    double	AWT;
 
-// data
-extern int **process_table;
-extern int process_num;
-
-int main(int argc, char *argv[]) {
-    if (set_simulation() == -1)
-        return (0);
-    if (start_simulation() == -1)
-        return (0);
-    print_table();
-    delete_queue();
-    return (0);
-}
-
-void print_table(void) {
-    double ATT = 0;
-    double AWT = 0;
+	ATT = 0;
+	AWT = 0;
     printf("process table:\n");
     printf("+-------+-------------------+----------------+\n");
     printf("|  PID  |  Turnaround Time  |  Waiting Time  |\n");
@@ -37,4 +21,15 @@ void print_table(void) {
     ATT /= process_num;
     AWT /= process_num;
     printf("Average Turnaround Time : %.2lf\nAverage Wating Time     : %.2lf\n", ATT, AWT);
+}
+
+int			main()
+{
+    if (set_simulation() == -1)
+        return (0);
+    if (start_simulation() == -1)
+        return (0);
+    print_table();
+    delete_queue();
+    return (0);
 }

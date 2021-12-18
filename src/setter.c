@@ -1,55 +1,8 @@
 #include "main.h"
 
-int         set_simulation(void);
-int         init_queue(void);
-int         set_processes(FILE *file);
-t_process     *init_process(int _PID, int _queue, int _arr_t, int _cycle_num);
-
-t_process    **  job_queue;           // processes before arriving ready queue
-t_node       *   ready_queue0;        // Q0, RR(time quantum = 2)
-t_node       *   ready_queue1;        // Q1, RR(time quantum = 6)
-t_process    **  ready_queue2;        // Q2, SRTN
-t_node       *   ready_queue3;        // Q3, FCFS
-t_process    **  sleep_queue;         // processes requesting I/O system call
-int        **  process_table;       // result of the simulation
-int            process_num;
-
-// setting for simulation
-// 1. open file read-only
-// 2. get process number
-// 3. initiate ready queues
-// 4. initiate processes and set their info
-// catch exception (code 01 ~ 04)
-int set_simulation(void) {
-    FILE *file;
-
-    file = fopen("input.txt", "r");
-    if (file == NULL)
-    {
-        printf("Error code 01: failed to find \"input.txt\" file.\n");
-        return (-1);
-    }
-    if (fscanf(file, "%d", &process_num) == -1)
-    {
-        printf("Error code 02: failed to read \"input.txt\" file.\n");
-        return (-1);
-    }
-    if (init_queue() == -1)
-    {
-        printf("Error code 03: failed to allocate memory bytes.\n");
-        return (-1);
-    }
-    if (set_processes(file) == -1)
-    {
-        printf("Error code 04: failed to read \"input.txt\" file or allocate memory bytes.\n");
-        return (-1);
-    }
-    return (0);
-}
-
 // allocate memory for ready Q0, Q1, Q2, Q3, job_queue, and sleep_queue
 // catch exception (code 03)
-int init_queue(void) {
+static int			init_queue(void) {
     job_queue = (t_process**)malloc(sizeof(t_process) * process_num);
     if (job_queue == NULL)
         return (-1);
@@ -92,14 +45,38 @@ int init_queue(void) {
     return (0);
 }
 
+// allocate memory for each process and initiate
+static t_process*	init_process(int _PID, int _queue, int _arr_t, int _cycle_num) {
+	t_process	*new_process = NULL;
+    int			arr_size;
+
+	new_process = (t_process*)malloc(sizeof(t_process));
+    if (new_process == NULL)
+        return (new_process);
+    new_process->PID = _PID;
+    new_process->queue = _queue;
+    new_process->arr_t = _arr_t;
+    new_process->cycle_num = _cycle_num;
+    new_process->cycle_index = 0;
+    new_process->cycle_total = 0;
+    arr_size = (_cycle_num * 2) - 1;
+    new_process->seq_burst = (int*)malloc(sizeof(int) * arr_size);
+    if (new_process->seq_burst == NULL)
+        return (NULL);
+    return (new_process);
+}
+
 // read each process info from input.txt file
 // init process and put the info on each process
 // catch exception (code 04)
-int set_processes(FILE *file) {
-    t_process* new_process;
-    int pid, init_q, arr_t, cycle;
-    int size_arr;
-    int file_value;
+int					set_processes(FILE *file) {
+    t_process*	new_process;
+    int			pid;
+	int			init_q;
+	int			arr_t;
+	int			cycle;
+    int			size_arr;
+    int			file_value;
 
     for (int i = 0; i < process_num; i++) {
         int total = 0;
@@ -123,22 +100,36 @@ int set_processes(FILE *file) {
     return (0);
 }
 
-// allocate memory for each process and initiate
-t_process* init_process(int _PID, int _queue, int _arr_t, int _cycle_num) {
-    int arr_size;
+// setting for simulation
+// 1. open file read-only
+// 2. get process number
+// 3. initiate ready queues
+// 4. initiate processes and set their info
+// catch exception (code 01 ~ 04)
+int					set_simulation(void)
+{
+    FILE	*file;
 
-    t_process* new_process = (t_process*)malloc(sizeof(t_process));
-    if (new_process == NULL)
-        return (new_process);
-    new_process->PID = _PID;
-    new_process->queue = _queue;
-    new_process->arr_t = _arr_t;
-    new_process->cycle_num = _cycle_num;
-    new_process->cycle_index = 0;
-    new_process->cycle_total = 0;
-    arr_size = (_cycle_num * 2) - 1;
-    new_process->seq_burst = (int*)malloc(sizeof(int) * arr_size);
-    if (new_process->seq_burst == NULL)
-        return (NULL);
-    return (new_process);
+    file = fopen("input.txt", "r");
+    if (file == NULL)
+    {
+        printf("Error code 01: failed to find \"input.txt\" file.\n");
+        return (-1);
+    }
+    if (fscanf(file, "%d", &process_num) == -1)
+    {
+        printf("Error code 02: failed to read \"input.txt\" file.\n");
+        return (-1);
+    }
+    if (init_queue() == -1)
+    {
+        printf("Error code 03: failed to allocate memory bytes.\n");
+        return (-1);
+    }
+    if (set_processes(file) == -1)
+    {
+        printf("Error code 04: failed to read \"input.txt\" file or allocate memory bytes.\n");
+        return (-1);
+    }
+    return (0);
 }
