@@ -5,6 +5,15 @@
 
 본 문서는 '운영체제' 과목 수강중 배운 내용을 바탕으로, MFQ 스케줄링 기법을 구현한 시뮬레이터 구현 프로젝트를 설명합니다.
 
+## 실행
+
+``` bash
+git clone https://github.com/bestowing/MFQ-Scheduling-Simulator.git
+cd MFQ-Scheduling-Simulator
+make
+./mfq-simulator
+```
+
 ## 개요
 본 프로그램은 텍스트 파일 *input.txt*에서 프로세스에 대한 정보를 받아, 정해진 스케줄링 기법으로 시뮬레이션합니다. 이후 시뮬레이션 결과를 콘솔창에 다음과 같은 순서로 출력합니다.
 
@@ -69,7 +78,8 @@
 ## 프로그램 설계
 
 프로그램 구조에 대해 설명합니다. 파일이 기능별로 분할되어 있으며, 헤더파일을 포함해 총 4개 파일이 있습니다:
-``main.h, main.c, setter.c, simulator.c``
+``main.h, main.c, setter.c, simulator.c``  
+`main.h` 파일은 include 디렉토리에, c 파일은 src 디렉토리에 위치합니다.
 
 ### 개요
 
@@ -106,26 +116,60 @@
 # define __MAIN_H
 
 // 표준 출력과 파일 입력
-#include <stdio.h>  
+# include <stdio.h>
 // 메모리 동적 할당
-#include <stdlib.h> 
+# include <stdlib.h>
 
+// 에러 상수 정의
+# define ERROR		-1
+
+/*
+**	struct define
+*/
 // 프로세스의 정보를 담는 구조체
-typedef struct Process {          
-    int PID; 
-    int queue;  
-    int arr_t;   
-    int cycle_num;
-    int cycle_index;
-    int cycle_total;
-    int* seq_burst;    
-} Process;
+typedef struct		t_process
+{
+    int				PID;
+    int				queue;
+    int				arr_t;
+    int				cycle_num;
+    int				cycle_index;
+    int				cycle_total;
+    int				*seq_burst;
+}					t_process;
 
 // ready queue를 구현하는 연결 리스트 구조체
-typedef struct Node {
-    struct Node* next;  
-    Process* data;    
-} Node;
+typedef struct		t_node
+{
+    struct t_node	*next;
+    t_process		*data;
+}					t_node;
+
+/*
+**	global variables
+*/
+// 시뮬레이터에서 사용하는 전역변수
+t_process			**job_queue;			// processes before arriving ready queue
+t_node				*ready_queue0;			// Q0, RR(time quantum = 2)
+t_node				*ready_queue1;			// Q1, RR(time quantum = 6)
+t_process			**ready_queue2;			// Q2, SRTN
+t_node				*ready_queue3;			// Q3, FCFS
+t_process			**sleep_queue;			// processes requesting I/O system call
+int					**process_table;		// result of the simulation
+int					process_num;
+
+/*
+**	setter.c
+*/
+// setter 파일에서 접근가능한 함수
+int 				set_simulation(void);
+
+/*
+**	simulator.c
+*/
+// simulator 파일에서 접근가능한 함수
+int					start_simulation(void);
+void				delete_queue(void);
 
 #endif
 ~~~
@@ -141,12 +185,12 @@ typedef struct Node {
 
 ~~~ c
 int main(int argc, char *argv[]) {
-    if (set_simulation() == -1)   // 파일에서 프로세스 정보를 가져온다.
-        return (0); // 예외 처리
-    if (start_simulation() == -1) // 시뮬레이션을 실시한다.
-        return (0); // 예외 처리
-    print_table();                // 결과를 출력하고 종료한다.
-    delete_queue();               // 사용한 메모리 자원을 반납한다.
+    if (set_simulation() == ERROR)      // 파일에서 프로세스 정보를 가져온다.
+        return (0);
+    if (start_simulation() == ERROR)    // 시뮬레이션을 실시한다.
+        return (0);
+    print_table();                      // 결과를 출력하고 종료한다.
+    delete_queue();                     // 사용한 메모리 자원을 반납한다.
     return (0);
 }
 ~~~
@@ -157,29 +201,30 @@ set_simulation() 함수에서 파일을 읽고, 프로세스 구조체에 메모
 파일 입력과 메모리 동적 할당 과정에서 생길 수 있는 예외가 각 code number와 함께 처리되어 있습니다.
 
 ~~~ c
-int set_simulation(void) {
-    FILE *file;
+int					set_simulation(void)
+{
+    FILE	*file;
 
     file = fopen("input.txt", "r");
     if (file == NULL)
     {
         printf("Error code 01: failed to find \"input.txt\" file.\n");
-        return (-1);
+        return (ERROR);
     }
-    if (fscanf(file, "%d", &process_num) == -1)
+    if (fscanf(file, "%d", &process_num) == ERROR)
     {
         printf("Error code 02: failed to read \"input.txt\" file.\n");
-        return (-1);
+        return (ERROR);
     }
-    if (init_queue() == -1)
+    if (init_queue() == ERROR)
     {
         printf("Error code 03: failed to allocate memory bytes.\n");
-        return (-1);
+        return (ERROR);
     }
-    if (set_processes(file) == -1)
+    if (set_processes(file) == ERROR)
     {
         printf("Error code 04: failed to read \"input.txt\" file or allocate memory bytes.\n");
-        return (-1);
+        return (ERROR);
     }
     return (0);
 }
