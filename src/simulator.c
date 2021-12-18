@@ -1,27 +1,27 @@
 #include "main.h"
 
-int         get_burst_time(Process* process);
-int         cpu_running(Process* process);
-int         push_queue(Process* process);
+int         get_burst_time(t_process* process);
+int         cpu_running(t_process* process);
+int         push_queue(t_process* process);
 int         io_check(void);
 int         arrival_check(void);
-int         burst_check(Process* process, int queue, int PID);
-Process     *fcfs(int type);
-Process     *srtn(void);
-Process     *preemtion(int burst_time);
+int         burst_check(t_process* process, int queue, int PID);
+t_process     *fcfs(int type);
+t_process     *srtn(void);
+t_process     *preemtion(int burst_time);
 int         sleep_check(void);
-void        sleep(Process* process);
-Process     *scheduling(void);
+void        sleep(t_process* process);
+t_process     *scheduling(void);
 int         start_simulation(void);
-void        delete_process(Process* process, int global_time);
+void        delete_process(t_process* process, int global_time);
 void        delete_queue(void);
 
-extern Process **  job_queue;       // processes before arriving ready queue
-extern Node    *   ready_queue0;    // Q0, RR(time quantum = 2)
-extern Node    *   ready_queue1;    // Q1, RR(time quantum = 6)
-extern Process **  ready_queue2;    // Q2, SRTN
-extern Node    *   ready_queue3;    // Q3, FCFS
-extern Process **  sleep_queue;     // processes requesting I/O system call
+extern t_process **  job_queue;       // processes before arriving ready queue
+extern t_node    *   ready_queue0;    // Q0, RR(time quantum = 2)
+extern t_node    *   ready_queue1;    // Q1, RR(time quantum = 6)
+extern t_process **  ready_queue2;    // Q2, SRTN
+extern t_node    *   ready_queue3;    // Q3, FCFS
+extern t_process **  sleep_queue;     // processes requesting I/O system call
 extern int     **  process_table;   // result of the simulation
 extern int         process_num;     // total number of processes to schedule
 
@@ -30,8 +30,8 @@ int time_quantum;
 
 // main simulation
 int start_simulation(void) {
-    Process *current_process;
-    Process* preemtion_process;
+    t_process *current_process;
+    t_process* preemtion_process;
     int current_process_id;
     int current_queue;
     int prev_process_id;
@@ -163,7 +163,7 @@ int start_simulation(void) {
 }
 
 // return remaining burst time of the process
-int get_burst_time(Process* process) {
+int get_burst_time(t_process* process) {
     return process->seq_burst[process->cycle_index];
 }
 
@@ -171,7 +171,7 @@ int get_burst_time(Process* process) {
 // if the process is finished, then return (-1)
 // else if the process call I/O system call, then return (0)
 // else, that means the process has not spent all time quantum, then return (1)
-int cpu_running(Process* process) {
+int cpu_running(t_process* process) {
     int remain;
     int cycle_num;
     int index;
@@ -195,9 +195,9 @@ int cpu_running(Process* process) {
 }
 
 // push the process proper ready queue
-int push_queue(Process* process) {
-    Node* head;
-    Node* node;
+int push_queue(t_process* process) {
+    t_node* head;
+    t_node* node;
     int queue_num;
     int pid;
 
@@ -219,7 +219,7 @@ int push_queue(Process* process) {
     default:
         break;
     }
-    node = (Node*)malloc(sizeof(Node));
+    node = (t_node*)malloc(sizeof(t_node));
     if (node == NULL)
     {
         printf("Error code 05: failed to allocate memory bytes.\n");
@@ -282,7 +282,7 @@ int arrival_check(void) {
 // if the process request I/O system call, then return (0)
 // else if the process has not spent all time quantum, then return (1)
 // else, that means the process is finished, then return (-1)
-int burst_check(Process* process, int queue, int PID) {
+int burst_check(t_process* process, int queue, int PID) {
     int result;
     
     result = cpu_running(process);
@@ -296,10 +296,10 @@ int burst_check(Process* process, int queue, int PID) {
 // schedule a process from receiving ready queue (= type)
 // if there's nothing to schedule, then return (NULL)
 // else, return scheduled process pointer
-Process* fcfs(int type) {
-    Process* result;
-    Node* head;
-    Node* remove;
+t_process* fcfs(int type) {
+    t_process* result;
+    t_node* head;
+    t_node* remove;
 
     switch (type) {
     case 0:
@@ -327,8 +327,8 @@ Process* fcfs(int type) {
 // schedule a process from ready queue 2, SRTN method
 // if there's nothing to schedule, then return (NULL)
 // else, return scheduled process pointer
-Process* srtn(void) {
-    Process* result;
+t_process* srtn(void) {
+    t_process* result;
     int min_time;
     int index;
     int burst_time;
@@ -355,8 +355,8 @@ Process* srtn(void) {
 
 // verifies that the preemtion has occurred (only ready queue 2)
 // if there's nothing to schedule, that means the preemption does not happend, then return (NULL)
-Process* preemtion(int burst_time) {
-    Process* result;
+t_process* preemtion(int burst_time) {
+    t_process* result;
     int min_time;
     int index = -1;
 
@@ -393,7 +393,7 @@ int sleep_check(void) {
 
 // sleep the process
 // that means push the process to sleep queue
-void sleep(Process* process) {
+void sleep(t_process* process) {
     int pid = process->PID;
     pid -= 1;
     sleep_queue[pid] = process;
@@ -403,8 +403,8 @@ void sleep(Process* process) {
 // Schedule a priority-considering process 
 // if all the ready queues are empty, then return (NULL)
 // else, return the process pointer
-Process* scheduling(void) {
-    Process* result;
+t_process* scheduling(void) {
+    t_process* result;
 
     result = fcfs(0);
     if (result != NULL) {
@@ -429,7 +429,7 @@ Process* scheduling(void) {
     return (result);
 }
 
-void delete_process(Process* process, int global_time) {
+void delete_process(t_process* process, int global_time) {
     int pid;
     int arrival_time;
     int total;
