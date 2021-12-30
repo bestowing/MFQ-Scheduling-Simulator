@@ -121,55 +121,55 @@ make
 # include <stdlib.h>
 
 // 에러 상수 정의
-# define ERROR		-1
+# define ERROR      -1
 
 /*
 **	struct define
 */
 // 프로세스의 정보를 담는 구조체
-typedef struct		t_process
+typedef struct      t_process
 {
-    int				PID;
-    int				queue;
-    int				arr_t;
-    int				cycle_num;
-    int				cycle_index;
-    int				cycle_total;
-    int				*seq_burst;
-}					t_process;
+    int             PID;
+    int             queue;
+    int             arr_t;
+    int             cycle_num;
+    int             cycle_index;
+    int             cycle_total;
+    int             *seq_burst;
+}                   t_process;
 
 // ready queue를 구현하는 연결 리스트 구조체
-typedef struct		t_node
+typedef struct      t_node
 {
-    struct t_node	*next;
-    t_process		*data;
-}					t_node;
+    struct t_node   *next;
+    t_process       *data;
+}                   t_node;
 
 /*
 **	global variables
 */
 // 시뮬레이터에서 사용하는 전역변수
-t_process			**job_queue;			// processes before arriving ready queue
-t_node				*ready_queue0;			// Q0, RR(time quantum = 2)
-t_node				*ready_queue1;			// Q1, RR(time quantum = 6)
-t_process			**ready_queue2;			// Q2, SRTN
-t_node				*ready_queue3;			// Q3, FCFS
-t_process			**sleep_queue;			// processes requesting I/O system call
-int					**process_table;		// result of the simulation
-int					process_num;
+t_process           **job_queue;			// processes before arriving ready queue
+t_node              *ready_queue0;			// Q0, RR(time quantum = 2)
+t_node              *ready_queue1;			// Q1, RR(time quantum = 6)
+t_process           **ready_queue2;			// Q2, SRTN
+t_node              *ready_queue3;			// Q3, FCFS
+t_process           **sleep_queue;			// processes requesting I/O system call
+int                 **process_table;		// result of the simulation
+int                 process_num;
 
 /*
 **	setter.c
 */
 // setter 파일에서 접근가능한 함수
-int 				set_simulation(void);
+int                 set_simulation(void);
 
 /*
 **	simulator.c
 */
 // simulator 파일에서 접근가능한 함수
-int					start_simulation(void);
-void				delete_queue(void);
+int                 start_simulation(void);
+void                delete_queue(void);
 
 #endif
 ~~~
@@ -184,7 +184,7 @@ void				delete_queue(void);
 1. 사용한 메모리 자원을 반납하고 종료한다.
 
 ~~~ c
-int main(int argc, char *argv[]) {
+int	main(int argc, char *argv[]) {
     if (set_simulation() == ERROR)      // 파일에서 프로세스 정보를 가져온다.
         return (0);
     if (start_simulation() == ERROR)    // 시뮬레이션을 실시한다.
@@ -201,7 +201,7 @@ set_simulation() 함수에서 파일을 읽고, 프로세스 구조체에 메모
 파일 입력과 메모리 동적 할당 과정에서 생길 수 있는 예외가 각 code number와 함께 처리되어 있습니다.
 
 ~~~ c
-int					set_simulation(void)
+int	set_simulation(void)
 {
     FILE	*file;
 
